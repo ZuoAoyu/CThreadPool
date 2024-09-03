@@ -17,6 +17,7 @@ int factoryInit(factory_t *pFactory, int threadNum) {
   bzero(pFactory, sizeof(factory_t));
   pFactory->threadNum = threadNum;
   pFactory->tidArr = (pthread_t *)calloc(threadNum, sizeof(pthread_t));
+  pFactory->runningFlag = 1;
 
   bzero(&pFactory->taskQueue, sizeof(taskQueue_t));
   pthread_cond_init(&pFactory->taskQueue.cond, NULL);
@@ -84,10 +85,9 @@ int main(int argc, char *argv[]) {
         pthread_mutex_unlock(&factory.taskQueue.mutex);
       } else if (readyList[i].data.fd == exitPipe[0]) {
         puts("exit threadPool!");
+        factory.runningFlag = 0;
 
-        for (int j = 0; j < workerNum; ++j) {
-          pthread_cancel(factory.tidArr[j]);
-        }
+        pthread_cond_broadcast(&factory.taskQueue.cond);
 
         for (int j = 0; j < workerNum; ++j) {
           pthread_join(factory.tidArr[j], NULL);

@@ -27,6 +27,10 @@ void *threadFunc(void *pArgs) {
 
     while (pFactory->taskQueue.queueSize == 0) {
       pthread_cond_wait(&pFactory->taskQueue.cond, &pFactory->taskQueue.mutex);
+      if (pFactory->runningFlag == 0) {
+        puts("child exit");
+        pthread_exit(NULL);
+      }
     }
 
     printf("Get Task!\n");
@@ -46,14 +50,19 @@ void *threadFunc(void *pArgs) {
     pthread_cleanup_pop(1);
     /* pthread_mutex_unlock(&pFactory->taskQueue.mutex); */
 
-    handleEvent(netFd);
+    handleEvent(netFd, pFactory);
     printf("pthread done! tid = %lu\n", pthread_self());
   }
 }
 
-int handleEvent(int netFd) {
+int handleEvent(int netFd, factory_t *pFactory) {
   recvFile(netFd);
   close(netFd);
+
+  if (pFactory->runningFlag == 0) {
+    puts("child exit");
+    pthread_exit(NULL);
+  }
 
   return 0;
 }

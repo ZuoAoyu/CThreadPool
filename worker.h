@@ -7,6 +7,6 @@
 void makeWorker(factory_t *pFactory);
 void *threadFunc(void *pArgs);
 
-int handleEvent(int netFd);
+int handleEvent(int netFd, factory_t *pFactory);
 
 #endif
